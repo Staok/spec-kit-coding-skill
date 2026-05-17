@@ -47,12 +47,34 @@ These rules apply to ALL interactions during spec-kit workflows:
 
 ### Documentation-First Workflow (Hard Constraint)
 
-- **For any new requirement or change: update documentation FIRST, then modify code.**
-- Documentation (README.md, DEVLOG.md, spec.md, plan.md, etc.) must always reflect the latest state.
-- Workflow order (do NOT reverse):
-  1. Update relevant docs
-  2. Implement code changes
-  3. Test and stabilize
+- **For spec/plan phase docs (spec.md, plan.md, tasks.md): update BEFORE coding.**
+  These are created via the speckit-* phases prior to implementation.
+- **For implementation-result docs (README.md Architecture, DEVLOG.md): update
+  AFTER coding and testing**, to accurately reflect what was actually built.
+- Documentation must always reflect the latest state of the project.
+- Workflow is split into two levels:
+
+  **Feature-level** (once per feature, before any code):
+  1. Generate/update spec/plan docs via speckit-* phases
+     → If git management is enabled: git commit
+
+  **Per-change** (every code change within a feature):
+  1. Implement code changes
+  2. Test and stabilize
+  3. Update implementation-result docs to reflect what was actually built
+     → If git management is enabled: git commit
+
+- Do NOT reverse either level's order. Do NOT require the user to repeat this rule every time.
+
+### Git Management (Hard Constraint)
+
+- **Default: do NOT create or manage a git repository** for the project.
+  Only enable git management when the user explicitly asks for it.
+- The user may request git management at any time (project init, mid-feature,
+  etc.). Once enabled, keep it enabled for the remainder of the project.
+- When git management is enabled, ALL git commits throughout the spec-kit
+  workflow follow this pattern: "if git management is enabled, git commit".
+  Never assume a commit step without checking this flag.
 - Do NOT require the user to repeat this rule every time.
 
 ---
@@ -185,23 +207,68 @@ Create `<project-dir>/README.md` with the following structure:
 
 ## Local Build
 
-```bash
-# Prerequisites
-# ...
+### Prerequisites
 
-# Build
+- <Prerequisite 1>
+- ...
+
+### Build Commands
+
+```bash
+# Debug
 ...
 
-# Run
+# Release
 ...
 ```
 
 ## Usage Examples
 
-### Example 1: <description>
 ```bash
+# Basic usage
+...
+
+# With options
 ...
 ```
+
+### Keyboard Controls (TUI) / Command Reference (CLI)
+
+| Key / Flag | Action |
+|------------|--------|
+| ...        | ...    |
+
+## SPEC Overview
+
+- **Type**: <CLI tool / TUI / library / web service / ...>
+- **Language / Version**: <e.g. C++20, Python 3.11>
+- **Build**: <CMake, cargo, pip, ...>
+- **Dependencies**: <key deps only>
+- **License**: <MIT, Apache-2.0, ...>
+
+## Architecture
+
+**This section is a living document.** Update it during implementation
+as new modules are added (per Section 6.4 of the spec-kit-coding skill).
+
+<Architecture diagram (ASCII art preferred) and description.
+Include: high-level component layout, platform abstraction (if cross-platform),
+data model summary, and key design decisions.>
+
+### Platform / Component Details
+
+<Break down key subsystems with enough detail that a new developer
+can understand the layout without reading all source code.>
+
+## Known Limitations / Issues
+
+- <Limitation 1: what it is and why>
+- <Limitation 2>
+
+## Features Plan / TODOs
+
+- [ ] <Planned feature or pending task>
+- [ ] ...
 
 ## Spec-Driven Development Workflow
 
@@ -217,6 +284,18 @@ completion and milestones are logged there, per feature.
 ````
 
 Fill in sections marked with `<>` based on conversation with the user.
+
+All project-level technical information (overview, architecture, data sources,
+known limitations, future plans) belongs in README under the sections shown
+above (`SPEC Overview` through `Features Plan / TODOs`). This keeps README
+the single source of truth for:
+
+- what the project is and does
+- how to build and use it
+- high-level architecture (for new contributors)
+- known limitations/issues and future plans
+
+This keeps the README the go-to file for both users and developers.
 
 ### 4.2 Create `DEVLOG.md`
 
@@ -340,7 +419,7 @@ and must be invoked separately.
   The subsequent path depends on requirement clarity:
   - **Ambiguous requirements**: production path — `specify → clarify → checklist → plan → tasks → analyze → implement`.
   - **Clear, well-understood requirements**: lean path — `specify → plan → tasks → implement`.
-  DEVLOG records a new phase cycle for that feature.
+    DEVLOG records a new phase cycle for that feature.
 - **Modifying an existing feature** re-enters its workflow at `speckit-clarify`.
   The subsequent path depends on requirement clarity:
   - **Ambiguous changes**: production path — `clarify → checklist → plan → tasks → analyze → implement`.
@@ -396,7 +475,112 @@ separate them first. Ask the user to confirm the split, then handle each
 independently. Never silently merge a modification into a new spec or
 vice-versa.
 
-## 6. Troubleshooting
+---
+
+## 6. Context Management & Execution Strategy
+
+### 6.1 Context Isolation (Hard Constraint)
+
+**LLMs degrade when context usage exceeds 50-60%.** To maintain quality:
+
+- **Lightweight phases** (specify, clarify, checklist, plan, tasks, analyze):
+  can run in the orchestrator's current session. Each phase produces artifacts
+  on disk that the next phase reads fresh.
+- **Heavy phase (implement)**: MUST spawn a fresh isolated sub-agent via
+  `sessions_spawn`. The sub-agent starts with empty context and reads only what
+  it needs. Do NOT run implement in a session that has accumulated multiple
+  prior phases — the degraded output will produce bugs.
+
+**Implementation batching**: If tasks.md contains more than 15 task items
+(i.e., 15+ lines of `- [ ]` checkboxes), split implementation into batches of
+10-15 tasks each:
+- Each batch = a fresh isolated sub-agent
+- After each batch: the sub-agent updates DEVLOG.md + README.md Architecture
+  section; if git management is enabled, git commit
+- The orchestrator tracks remaining tasks, and spawns the next batch sub-agent
+
+**Rule of thumb**: if you estimate a session will process more than ~12 tool
+calls of heavy code generation, proactively spawn a fresh sub-agent for the
+next batch. Better to over-split than to produce garbage from context
+saturation.
+
+### 6.2 How to Spawn Implementation Sub-Agents (Critical)
+
+**The orchestrator must NOT summarize documents for the sub-agent.**
+Summaries lose detail, introduce errors, and defeat the purpose of fresh
+context. The sub-agent must read the actual source documents itself.
+
+When spawning an implementation sub-agent, the orchestrator's task message
+MUST follow this template:
+
+```
+You are implementing feature <NNN>-<name> for project at <project-dir>.
+
+Before writing any code, read these documents in order:
+1. <project-dir>/.specify/memory/constitution.md
+2. <project-dir>/specs/<NNN>-<name>/spec.md
+3. <project-dir>/specs/<NNN>-<name>/plan.md
+4. <project-dir>/specs/<NNN>-<name>/tasks.md
+5. <project-dir>/specs/<NNN>-<name>/analysis.md (if it exists)
+6. <project-dir>/README.md (especially the Architecture section)
+
+Then implement tasks <M> through <N> from tasks.md.
+Follow the speckit-implement skill workflow.
+
+After completing the assigned tasks:
+- Update <project-dir>/DEVLOG.md
+- Update <project-dir>/README.md Architecture section with any new
+  modules/files and architectural decisions
+- If git management is enabled: git commit all changes
+```
+
+**Key rules**:
+- The orchestrator provides **file paths only** — never pre-digested content
+- The sub-agent reads everything itself, fresh
+- Each batch's sub-agent gets the exact same document list (the documents
+  may have been updated by previous batches)
+- The only difference between batches is the task range (`tasks <M> through <N>`)
+
+### 6.3 Pre-Implement Document Checklist (Hard Constraint)
+
+Before ANY implementation session (main or sub-agent), the executing agent
+MUST read these documents in order:
+
+1. `.specify/memory/constitution.md` — project principles, must not violate
+2. `specs/<NNN>-<name>/spec.md` — feature specification
+3. `specs/<NNN>-<name>/plan.md` — technical implementation plan
+4. `specs/<NNN>-<name>/tasks.md` — actionable tasks
+5. `specs/<NNN>-<name>/analysis.md` — cross-artifact consistency findings
+   (if exists; from speckit-analyze)
+6. `README.md` (Architecture section) — current codebase structure,
+   file-to-purpose mapping
+
+**What to skip**: The clarify and checklist outputs are NOT re-read for
+implementation:
+- `clarify` output is already encoded into spec.md — reading spec.md covers it
+- `checklist` is a requirement quality meta-tool; its items (e.g., "does the
+  spec cover error states?") are not directly actionable for coding
+
+### 6.4 Architecture Updates During Implementation
+
+During implementation, the Architecture section of `README.md` is a **living
+document** — not a one-time planning artifact.
+
+After implementing a significant module or completing a batch of tasks:
+1. Update `README.md` → `## Architecture` → `### Platform / Component Details`
+   with:
+   - New modules/files added and their purpose
+   - Any architectural decisions made during implementation
+   - Data flow changes
+2. Keep descriptions concise: one line per file/module is enough
+3. If git management is enabled: git commit the README update along with the code changes
+
+This ensures any future session (or fresh sub-agent) can read README.md and
+understand the codebase layout without scanning all source files.
+
+---
+
+## 7. Troubleshooting
 
 | Problem                          | Fix                                       |
 | -------------------------------- | ----------------------------------------- |
@@ -406,7 +590,7 @@ vice-versa.
 | Scripts not executable           | `chmod +x .specify/scripts/bash/*.sh`   |
 | Task references stale spec       | Re-run the relevant speckit-* phase       |
 
-## Reference: Speckit Skill List
+## 8. Reference: Speckit Skill List
 
 These are the skills that get installed to the workspace (one-time):
 
