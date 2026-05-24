@@ -1,4 +1,4 @@
-[中文文档](https://github.com/Staok/spec-kit-coding/blob/main/README_zh-cn.md)
+[中文文档](https://github.com/Staok/spec-kit-coding-skill/blob/main/README_zh-cn.md)
 
 ------
 
