@@ -20,23 +20,23 @@
 
 - 对于完成业务/任务的类，不需要多例，就可以写为单例，对于单例类，写上不可拷贝或移动的构造，以及不可赋值操作的拷贝和移动构造。
 
-- 尽量都做到 RAII。都有 run()（以及 getIsRunning()） 或 init()（以及 getIsInited()） 和 stop() 或 deInit() 函数，做到 每个模块可独立的、动态的、运行时的创建、启停和释放。
+- 如果是模块作用的类：
 
-- 在 stop() 或 deInit() 函数里面，对变量恢复为默认值。
-
-- 关于类变量初始化：
-
-  - 类变量在声明的地方进行赋值默认值。
-  - 使用 nullptr 对 指针变量声明的时候 进行 初始化；指针资源释放掉后，需要再赋值为 nullptr 。
-  - 对于 const 变量，则在 类构造函数 的 初始化列表 处 进行赋值。尽量使用 const。
-
-- 是否在运行或是否已经初始化用 `std::atomic<bool> mIsRunning{false};` 或 `mIsInited`，在上面的 启停和判断 函数中写好，在对外 API 中都应该先判断 是否已经运行或者初始化。对外 API 尽量都做到 线程安全；锁范围尽量小。内部使用线程或线程池的，由外部传入；如果线程内异步执行类内资源，在此之前，使用 `std::weak_ptr<XXX> selfWeakPtr = shared_from_this();` 并线程函数 lambda 按值捕获 `selfWeakPtr`（注意不要捕获 this，异步执行的线程可能捕获已经资源释放掉了的 类实例 this，因此使用这里说的 捕获 selfWeakPtr 的方法！），在里面 `.lock()` 然后判断是否为空和判断是否在运行或初始化，再使用。
-
-  对于类在启动其作用的时候，如果没有一直循环运行的任务（比如在一个线程里面或者 启动函数里面的 while(true){...}）则使用 init()、getIsInited() 和 deInit() 的函数组合 以及标志 `std::atomic<bool> mIsInited{false};`，相反，则使用 run()、getIsRunning() 和 stop() 的函数组合 以及标志 `std::atomic<bool> mIsRunning{false};`。注意，所有 启动 和 停止（对应 init() 和 deInit() 或 run() 和 stop()）的函数都应该是阻塞执行的而不要在内部有什么异步执行。下面给出参考。
+  对于类在启动其作用的时候，如果没有一直循环运行的任务（比如在一个线程里面或者 启动函数里面的 `while(true){...}`）则使用 init 的情况；相反，则使用 run 的情况。下面给出参考。
 
   对于 init 的情况，具体参考这个例子来写类的框架：`CppEngineeringFrameworkReference/CppModuleInitCaseExample.cpp`。
 
   对于 run 的情况，具体参考这个例子来写类的框架：`CppEngineeringFrameworkReference/CppModuleRunCaseExample.cpp`。
+
+  关于框架参考代码的 log 和 线程池 相关依赖为示例参考，不是要求。
+
+- 如果是工具作用的类，尽量做到 RAII。
+- 在除了启停的 API 以外的其它对外 API 中都应该先判断 是否已经运行或者初始化完毕。
+- 按照需要，对外 API 都做到 线程安全（结合具体业务考虑选择使用什么类型的锁，比如读写锁、循环锁等）；锁范围尽量小。如果内部使用线程或线程池的，则需由外部传入；如果线程内异步执行类内资源，在此之前，使用 `std::weak_ptr<XXX> selfWeakPtr = shared_from_this();` 并线程函数 lambda 按值捕获 `selfWeakPtr`（注意不要捕获 this，异步执行的线程可能捕获已经资源释放掉了的 类实例 this，因此使用这里说的 捕获 selfWeakPtr 的方法！），在里面 `.lock()` 然后判断是否为空和判断是否已经在运行或初始化完毕，再使用。
+- 关于类变量初始化：
+  - 类变量在声明的地方进行赋值默认值。
+  - 使用 nullptr 对 指针变量（尽量使用智能指针）声明的时候 进行 初始化；指针资源释放掉后，需要再赋值为 nullptr 。
+  - 对于 const 变量，则在 类构造函数 的 初始化列表 处 进行赋值。尽量使用 const。
 
 
 

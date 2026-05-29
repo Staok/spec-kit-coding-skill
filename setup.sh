@@ -618,6 +618,9 @@ check_system_tools() {
 # ---------------------------------------------------------------------------
 # Cleanup: remove temp directories on exit/interrupt
 # ---------------------------------------------------------------------------
+# Declare BEFORE any function that uses it -- bash 3.2 requires explicit
+# declaration prior to set -u array access, and `:-` fallback ensures
+# compatibility with set -o nounset on empty arrays.
 _CLEANUP_DIRS=()
 
 register_cleanup() {
@@ -625,6 +628,9 @@ register_cleanup() {
 }
 
 cleanup_temp_dirs() {
+    if [ ${#_CLEANUP_DIRS[@]} -eq 0 ]; then
+        return 0
+    fi
     for dir in "${_CLEANUP_DIRS[@]}"; do
         [ -d "$dir" ] && rm -rf "$dir"
     done
@@ -638,7 +644,7 @@ trap cleanup_temp_dirs EXIT INT TERM
 main() {
     echo ""
     echo "╔══════════════════════════════════════════════════╗"
-    echo "║  spec-kit-coding — Dependency Setup             ║"
+    echo "║  spec-kit-coding — Dependency Setup              ║"
     echo "╚══════════════════════════════════════════════════╝"
 
     local exit_code=0
