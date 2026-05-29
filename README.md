@@ -48,7 +48,7 @@ User: "Add a new feature with spec-kit-coding"
 | Path | Steps | When |
 |------|-------|------|
 | **Production** (8-step) | constitution → specify → clarify → checklist → plan → tasks → analyze → implement | Complex, ambiguous, high-risk features |
-| **Lean** (5-step) | specify → clarify → plan → tasks → implement | Simple, well-understood features |
+| **Lean** (6-step) | constitution → specify → clarify → plan → tasks → implement | Simple, well-understood features |
 
 Each feature tracks its own phase independently in `DEVLOG.md`.
 

@@ -44,7 +44,7 @@
 | 路径                 | 步骤                                                         | 适用场景               |
 | -------------------- | ------------------------------------------------------------ | ---------------------- |
 | **完整路径**（8 步） | constitution → specify → clarify → checklist → plan → tasks → analyze → implement | 复杂、模糊、高风险特性 |
-| **精简路径**（5 步） | specify → clarify → plan → tasks → implement                 | 简单、清晰明确的特性   |
+| **精简路径**（6 步） | constitution → specify → clarify → plan → tasks → implement  | 简单、清晰明确的特性   |
 
 每个特性在 `DEVLOG.md` 中独立追踪阶段状态。
 
