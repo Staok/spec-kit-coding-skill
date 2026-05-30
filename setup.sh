@@ -329,6 +329,11 @@ check_external_skills() {
         check_single_file_skill "$name" "$url" "mattpocock/skills" || ALL_OK=false
     done
 
+    # --- 3c2. mattpocock multi-file skills (directory-level) ---
+    echo ""
+    info "mattpocock multi-file skills:"
+    check_mattpocock_dir_skills || ALL_OK=false
+
     # --- 3d. ui-ux-pro-max entire repo ---
     echo ""
     info "ui-ux-pro-max skill:"
@@ -427,6 +432,87 @@ check_single_file_skill() {
         fail "$name (download failed)"
         return 1
     fi
+}
+
+# Helper: check multi-file mattpocock skills (entire skill directories from cloned repo)
+check_mattpocock_dir_skills() {
+    local MP_REPO="https://github.com/mattpocock/skills.git"
+
+    # Map: local-name=repo-path
+    local MP_DIR_SKILLS=(
+        "mattpocock-grill-with-docs=skills/engineering/grill-with-docs"
+    )
+
+    local need_download=false
+    for entry in "${MP_DIR_SKILLS[@]}"; do
+        local name="${entry%%=*}"
+        if [ ! -f "${EXTERNAL_DIR}/${name}/SKILL.md" ] || [ "$FORCE" = "true" ]; then
+            need_download=true
+            break
+        fi
+    done
+
+    if ! $need_download; then
+        ok "All multi-file mattpocock skills present (${#MP_DIR_SKILLS[@]} total)"
+        for entry in "${MP_DIR_SKILLS[@]}"; do
+            local name="${entry%%=*}"
+            local srcfile="${EXTERNAL_DIR}/${name}/SOURCE.md"
+            if [ ! -f "$srcfile" ]; then
+                write_source_md "${EXTERNAL_DIR}/${name}" "https://github.com/mattpocock/skills/tree/main/${entry#*=}"
+            fi
+        done
+        return 0
+    fi
+
+    if [ "$MODE" = "--check-only" ]; then
+        local count=0
+        for entry in "${MP_DIR_SKILLS[@]}"; do
+            local name="${entry%%=*}"
+            if [ ! -f "${EXTERNAL_DIR}/${name}/SKILL.md" ]; then
+                fail "$name (not found)"
+                count=$((count + 1))
+            fi
+        done
+        if [ "$count" -gt 0 ]; then
+            info "$count/${#MP_DIR_SKILLS[@]} multi-file mattpocock skills missing"
+            return 1
+        fi
+        return 0
+    fi
+
+    warn "Downloading multi-file mattpocock skills from GitHub..."
+    local MP_TMP
+    MP_TMP=$(mktemp -d -t mp-skills.XXXXXX)
+    register_cleanup "$MP_TMP"
+
+    if ! git_clone_with_retry "$MP_REPO" "$MP_TMP"; then
+        fail "Failed to clone mattpocock/skills repo after retries"
+        return 1
+    fi
+
+    local mp_ok=0 mp_fail=0
+    for entry in "${MP_DIR_SKILLS[@]}"; do
+        local name="${entry%%=*}"
+        local repo_path="${entry#*=}"
+        local src="$MP_TMP/$repo_path"
+        local dest="${EXTERNAL_DIR}/${name}"
+        if [ -d "$src" ] && [ -f "${src}/SKILL.md" ]; then
+            rm -rf "$dest" && cp -r "$src" "$dest"
+            write_source_md "$dest" "https://github.com/mattpocock/skills/tree/main/$repo_path"
+            mp_ok=$((mp_ok + 1))
+        else
+            fail "$name (SKILL.md not found at $repo_path — repo structure may have changed)"
+            mp_fail=$((mp_fail + 1))
+        fi
+    done
+
+    rm -rf "$MP_TMP"
+    if [ "$mp_fail" -gt 0 ]; then
+        info "$mp_ok downloaded, $mp_fail failed (out of ${#MP_DIR_SKILLS[@]} total)"
+        return 1
+    fi
+    ok "All multi-file mattpocock skills downloaded (${#MP_DIR_SKILLS[@]} total)"
+    return 0
 }
 
 # Helper: check ECC skills (entire skill directories from cloned repo)
