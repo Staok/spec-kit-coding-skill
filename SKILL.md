@@ -4,8 +4,9 @@ description: "Orchestrator for GitHub Spec-Kit SDD workflow in OpenClaw. Use whe
 ---
 # Spec-Kit Coding -- OpenClaw Orchestrator
 
-Orchestrates the complete Spec-Driven Development workflow via
-[github/spec-kit](https://github.com/github/spec-kit).
+> **Repo:** [Staok/spec-kit-coding-skill](https://github.com/Staok/spec-kit-coding-skill)
+
+Orchestrates the complete Spec-Driven Development workflow via [github/spec-kit](https://github.com/github/spec-kit).
 
 Covers: Engineering Implementation. Does not cover
 requirements discovery, operations/deployment, or cross-domain (SRE, security, etc.).
@@ -22,25 +23,28 @@ These constraints are non-negotiable. Do NOT require the user to repeat them.
 
 - Never transmit sensitive information to the network.
 - Before any external action (API calls, sending data outside local machine),
-   explain and ask for approval.
+  explain and ask for approval.
 - Do not install third-party libraries or modify system config without
-   asking first. If a new dependency is needed, explain why and get approval.
+  asking first. If a new dependency is needed, explain why and get approval.
 - Prefer reusing existing, proven, popular third-party solutions. Avoid
-   reinventing the wheel. Keep tool usage simple and lean. Minimize dependency footprint.
+  reinventing the wheel. Keep tool usage simple and lean. Minimize dependency footprint.
+- **WARNING:** As a principle, agents should be disabled in critical-path code,
+  legacy system maintenance, and security-sensitive modules. Permitted only in
+  low-risk scenarios such as prototyping, search, and documentation.
 
 ### Feature Management / Quick Reference
 
 - Starting a project, follow section: WORKFLOW, from STEP 1 to STEP 7.
-- Add a new feature or modify a existing feature:
-   - "add" / "new" / behavior no spec covers -> new feature -> section: STEP 5: Spec-Kit Phases / New Feature.
-   - "change" / "modify" / changing existing behavior -> modify existing -> section: Feature Modification Entry Point.
+- Add a new feature or modify an existing feature:
+  - "add" / "new" / behavior no spec covers -> new feature -> section: STEP 5: Spec-Kit Phases / New Feature.
+  - "change" / "modify" / changing existing behavior -> modify existing -> section: Feature Modification Entry Point.
 - Each `/speckit-specify` invocation creates exactly ONE feature. If the user
-   describes a messy, multi-concern requirement, split it first:
-   - List each proposed feature with a short name and one-line summary.
-   - Note dependencies between features.
-   - Ask user to confirm the split before proceeding.
+  describes a messy, multi-concern requirement, split it first:
+  - List each proposed feature with a short name and one-line summary.
+  - Note dependencies between features.
+  - Ask user to confirm the split before proceeding.
 - When uncertain whether the user wants a new feature or a modification to an
-   existing one, ASK. Do not guess. Present your organized analysis. Show several or both options concisely.
+  existing one, ASK. Do not guess. Present your organized analysis. Show several or both options concisely.
 - For projects that have already been delivered or already exist, if a bug is reported, refer to section: Bug Fix Entry Point.
 
 ### Communication
@@ -177,6 +181,8 @@ Outputs:
   details — it is a glossary, not a spec or scratch pad.
 - docs/adr/: Architecture Decision Records (sparingly).
 
+Runs once per project. Subsequent features reuse CONTEXT.md and ADRs.
+
 GATE: Confirm with user that CONTEXT.md accurately captures the domain
 language and any created ADRs are correct.
 
@@ -250,11 +256,11 @@ After completing your work:
 - Report back using the structured format below
 ```
 
-| Placeholder                | Implement                                                    | Code Review (Step 6.1)                                       | Test (Step 6.2)                                              |
-| -------------------------- | ------------------------------------------------------------ | ------------------------------------------------------------ | ------------------------------------------------------------ |
-| ROLE                       | implementing                                                 | performing a CODE REVIEW for                                 | performing TEST DEVELOPMENT for                              |
-| ACTION                     | writing any code                                             | reviewing                                                    | writing any test code                                        |
-| ROLE_SPECIFIC_INSTRUCTIONS | Implement tasks M-N from tasks.md per speckit-implement skill. If plan is infeasible or conflicts with spec.md, STOP and report to orchestrator -- do NOT proceed. | Apply `spec-kit-coding/external-skills/superpowers-requesting-code-review`. **Checklist: (1) Practicality & Generality (2) Risk (memory, threads, deadlock, exception , errors, UB, security) (3) Optimization (algorithmic, allocations, copies, deps) (4) Architecture Alignment (5) Coding Standards per constitution.md.** Output: severity (Critical/Important/Minor/Suggestion) with file:line, description, recommendation. Overall: Ready/Needs Fixes/Major Rework. | Test environment:`/tmp/<project-name>-test/`. Framework by language (gtest/C++, pytest/Python, cargo/Rust, Jest/JS-TS, go test/Go .etc). **Ask the user for testing strategy: Module-level (cover all public APIs, normal/boundary/error inputs and thread safety(if applicable, concurrent construction/destruction and API calls from multiple threads), key API call sequences); Integration (Module-to-module interaction tests, Full application functional flow tests), that validate that all business logic behaves as expected; Coverage (optional): language-appropriate tools(gcov+lcov (C++), pytest-cov(python), cargo-tarpaulin (Rust), Jest --coverage (JS/TS), or language-equivalent).** When tests fail: apply BOTH skills — `spec-kit-coding/external-skills/mattpocock-diagnose` (build feedback loop first → 3-5 falsifiable hypotheses → instrument → fix → regression-test) AND `spec-kit-coding/external-skills/superpowers-systematic-debugging` (7-layer diagnostic model: L1 symptom → L2 logic → L3 system → L4 architecture → L5 cross-system → L6 platform → L7 spec gap). If 3+ fix attempts fail: question architecture, report to orchestrator. If ALL pass: proceed to STEP 6.3: Final Review. |
+| Placeholder                | Implement                                                                                                                                                          | Code Review (Step 6.1)                                                                                                                                                                                                                                                                                                                                                                                                                                                             | Test (Step 6.2)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ROLE                       | implementing                                                                                                                                                       | performing a CODE REVIEW for                                                                                                                                                                                                                                                                                                                                                                                                                                                       | performing TEST DEVELOPMENT for                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| ACTION                     | writing any code                                                                                                                                                   | reviewing                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | writing any test code                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| ROLE_SPECIFIC_INSTRUCTIONS | Implement tasks M-N from tasks.md per speckit-implement skill. If plan is infeasible or conflicts with spec.md, STOP and report to orchestrator -- do NOT proceed. | Apply `spec-kit-coding/external-skills/superpowers-requesting-code-review`. **Checklist: (1) Practicality & Generality (2) Risk (memory, threads, deadlock, exception, errors, UB, security) (3) Optimization (algorithmic, allocations, copies, deps) (4) Architecture Alignment (5) Coding Standards per constitution.md.** Output: severity (Critical/Important/Minor/Suggestion) with file:line, description, recommendation. Overall: Ready/Needs Fixes/Major Rework. | Test environment:`/tmp/<project-name>-test/`. Framework by language (gtest/C++, pytest/Python, cargo/Rust, Jest/JS-TS, go test/Go .etc). **Ask the user for testing strategy: Module-level (cover all public APIs, normal/boundary/error inputs and thread safety(if applicable, concurrent construction/destruction and API calls from multiple threads), key API call sequences); Integration (Module-to-module interaction tests, Full application functional flow tests), that validate that all business logic behaves as expected; Coverage (optional): language-appropriate tools(gcov+lcov (C++), pytest-cov(python), cargo-tarpaulin (Rust), Jest --coverage (JS/TS), or language-equivalent).** When tests fail: apply BOTH skills — `spec-kit-coding/external-skills/mattpocock-diagnose` (build feedback loop first → 3-5 falsifiable hypotheses → instrument → fix → regression-test) AND `spec-kit-coding/external-skills/superpowers-systematic-debugging` (7-layer diagnostic model: L1 symptom → L2 logic → L3 system → L4 architecture → L5 cross-system → L6 platform → L7 spec gap). If 3+ fix attempts fail: question architecture, report to orchestrator. If ALL pass: proceed to STEP 6.3: Final Review. |
 
 #### Sub-Agent Report Format
 
@@ -295,18 +301,12 @@ Spawn a fresh isolated session using the spawn template (Step 6) with the
 After review:
 
 1. Present findings to user.
-
 2. Ask: "Which review findings should be addressed?"
-
 3. Apply ONLY user-approved fixes.
-
 4. Re-run review on changed files AND related files.
-
 5. If new issues: repeat from step 1. Limit: 3 review-fix cycles total.
-
-6. If issues persist after 3 cycles: question architecture, report to orchestrator,
-
-   may ask user to record them to README.md Known Limitations / Issues section.
+6. If issues persist after 3 cycles: stop. Report outstanding issues to the
+   user; user may decide to record them in README.md Known Limitations / Issues and proceed.
 
 #### STEP 6.2: Testing
 
@@ -353,7 +353,6 @@ Perform these actions in order. Do NOT skip any.
    ```
 
    Skip for trivial changes (tests-only, generated, formatting, etc.).
-
 4. Record findings in README.md -> Features Plan / TODOs (NOT as TODO
    comments in source). Format:
    `- [ ] [category] description (file: path:line-range)`
@@ -364,7 +363,9 @@ Perform these actions in order. Do NOT skip any.
    > **Implement now (low risk, high impact):**
    >
    > - [item]
-   >   **Defer (tracked in README):**
+   >
+   > **Defer (tracked in README):**
+   >
    > - [item]
    >   Which "implement now" items should I apply?
    >
@@ -385,28 +386,18 @@ Run through this checklist. Every item must be checked:
 
 - [ ] All required speckit-* phases completed or skipped (lean skips
   checklist, analyze -- this is expected).
-
 - [ ] STEP 4 Grill Alignment completed (CONTEXT.md + any ADRs created).
-  
 - [ ] Code review(If asked) completed and approved fixes applied.
-
 - [ ] All tests pass.
-
 - [ ] Source tree is clean (no temp files, no build artifacts in source dirs).
-
 - [ ] Complexity Delta checked (Step 6.3 item 3). Net entropy not increased
   without justification.
-
 - [ ] Whole README.md is up-to-date.
 
   Especially: README.md Architecture section is up-to-date. Optimization findings tracked in README.md Features Plan / TODOs section.
-
 - [ ] DEVLOG.md reflects all completed phases.
-
 - [ ] All hard constraints from section HARD CONSTRAINTS respected.
-
 - [ ] If git enabled: all changes committed.
-
 - [ ] Evidence Card. Fill out ONE evidence card covering all verification:
 
   ```text
@@ -420,6 +411,7 @@ Run through this checklist. Every item must be checked:
   ```
 
   Confidence grades:
+
   - A: Direct verification + regression, no unknowns
   - B: Direct verification, bounded residual risk
   - C: Partial verification only, not closed — do NOT claim done
@@ -433,11 +425,11 @@ GATE: Present delivery summary to user, including the filled Evidence Card.
 
 When the user wants to modify an existing feature, route by change type:
 
-| Tier | Type               | Examples                                        | Route                                                        |
-| ---- | ------------------ | ----------------------------------------------- | ------------------------------------------------------------ |
-| 1    | Parameter/Constant | timeout 30s->60s, max retries 3->5              | You can directly edit spec.md, then continue spec-Kit phases: clarify -> plan -> tasks -> implement -> then go section: STEP 6.2: Testing |
-| 2    | Ambiguity/Gap      | "handle errors" unspecified, missing edge cases | clarify -> plan -> tasks -> implement -> then go section: STEP 6.1 to 6.3 |
-| 3    | Substantive        | new OAuth login, REST->WebSocket, new roles     | Re-run specify -> full pipeline -> then go section: STEP 6.1 to 6.3 |
+| Tier | Type               | Examples                                        | Route                                                                                                                                   |
+| ---- | ------------------ | ----------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| 1    | Parameter/Constant | timeout 30s->60s, max retries 3->5              | You can directly edit spec.md, then continue spec-Kit phases: clarify -> plan -> tasks -> implement -> then go section: STEP 6.2 to 6.3 |
+| 2    | Ambiguity/Gap      | "handle errors" unspecified, missing edge cases | clarify -> plan -> tasks -> implement -> then go section: STEP 6.1 to 6.3                                                               |
+| 3    | Substantive        | new OAuth login, REST->WebSocket, new roles     | Re-run specify -> full pipeline -> then go section: STEP 6.1 to 6.3                                                                     |
 
 DEVLOG records a new phase cycle regardless of tier.
 
@@ -452,7 +444,8 @@ When user reports a bug:
    - Spec gap (behavior not defined) -> clarify -> plan -> implement.
    - Implementation error (code disagrees with spec) -> fix directly.
 3. Then go section: STEP 6.2: Testing
-4. Go section: STEP 7: Delivery Check.
+4. Then go section: STEP 6.3: Final Review
+5. Go section: STEP 7: Delivery Check.
 
 ---
 
