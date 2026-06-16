@@ -35,6 +35,7 @@ These constraints are non-negotiable. Do NOT require the user to repeat them.
 ### Feature Management / Quick Reference
 
 - Starting a project, follow section: WORKFLOW, from STEP 1 to STEP 7.
+- On first project creation, ask the user: auto-run the WORKFLOW (pause only for required confirmations), or confirm at each step.
 - Add a new feature or modify an existing feature:
   - "add" / "new" / behavior no spec covers -> new feature -> section: STEP 5: Spec-Kit Phases / New Feature.
   - "change" / "modify" / changing existing behavior -> modify existing -> section: Feature Modification Entry Point.
@@ -344,7 +345,7 @@ Perform these actions in order. Do NOT skip any.
    - Retired branches/fallbacks/adapters:
    - Net entropy: decreased | stable | increased-with-justification
    - Required follow-up:
-
+   
    Complexity Governance Suggestion:
    - Recommendation: none | monitor | schedule-refactor | extract helper | split owner | open follow-up
    - Why:
